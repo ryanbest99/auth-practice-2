@@ -1,8 +1,7 @@
 require("dotenv").config({ path: "./config.env" });
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
-const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const sendEmail = require("../utils/sendEmail");
 
 exports.signUp = async (req, res) => {
   //   res.send("Sign upsuccess");
@@ -33,33 +32,21 @@ exports.register = async (req, res) => {
         { expiresIn: "10minutes" }
       );
 
-      console.log(token);
-
-      const emailData = {
-        to: email, // Change to your recipient
-        from: process.env.EMAIL_FROM, // Change to your verified sender
-        subject: "Account Activation Link",
-        html: `
+      const message = `
       <h1> Please use the following link to activate your account </h1>
       <strong><p>${process.env.CLIENT_URL}/auth/activate/${token}</p></strong>
       <hr />
       <p> This Email may have sensitive information </p>
       <p>${process.env.CLIENT_URL}</p>
-      `,
-      };
+      `;
 
-      sgMail
-        .send(emailData)
-        .then((response) => {
-          console.log(response[0].statusCode);
-          console.log(response[0].headers);
-          return res.json({
-            message: `Email has been sent to " ${email} " successfully. Follow the instruction to activate your account.`,
-          });
-        })
-        .catch((error) => {
-          console.error(error);
-        });
+      const subject = "Account Activation Link";
+
+      sendEmail({ email, subject, text: message });
+
+      res.status(202).json({
+        message: `Email has been sent to " ${email} " successfully. Follow the instruction to activate your account.`,
+      });
     });
   } catch (err) {
     res.status(500).json({ success: false, err: err.message });
