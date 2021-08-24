@@ -141,7 +141,19 @@ exports.user = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     await req.user.remove();
-    res.status(200).send(req.user);
+    const message = `
+      <h1> You Account Has Been Removed Successfully. </h1>
+      <hr />
+      <p> Thanks for having used our service. </p>
+      `;
+
+    const subject = "Your Account Has Been Deleted Successfully";
+
+    sendEmail({ email: req.user.email, subject, text: message });
+
+    res.status(202).json({
+      message: `Your Account has been removed successfully. `,
+    });
   } catch (err) {
     res.status(500).json({ success: false, err: err.message });
   }
